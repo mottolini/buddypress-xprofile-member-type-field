@@ -127,6 +127,10 @@ if (!class_exists('Bxmtf_Plugin'))
 
         public function bxmtf_get_field_value($value='', $type='', $id='')
         {
+            if ($type == 'membertype') {
+                $value = 'model';
+            }
+            return $value;
             $value_to_return = strip_tags($value);
             if ($value_to_return !== '') {
                 // Birthdate.
@@ -229,103 +233,9 @@ if (!class_exists('Bxmtf_Plugin'))
             $field_id = $data->field_id;
             $field = new BP_XProfile_Field($field_id);
 
-            if ($field->type == 'image' || $field->type == 'file' && isset($_FILES['field_'.$field_id]))
+            if ($field->type == 'membertype')
             {
-                $uploads = wp_upload_dir();
-                $filesize = round($_FILES['field_'.$field_id]['size'] / (1024 * 1024), 2);
-                if (isset($_FILES['field_'.$field_id]) && $filesize > 0)
-                {
-                    $ext = strtolower(substr($_FILES['field_'.$field_id]['name'], strrpos($_FILES['field_'.$field_id]['name'],'.')+1));
-                    if ($field->type == 'image')
-                    {
-                        $ext_allowed = $this->images_ext_allowed;
-                        if (!in_array($ext, $ext_allowed))
-                        {
-                            bp_core_add_message( sprintf(__('Image type not allowed: (%s).', 'bxmtf'), implode(',', $this->images_ext_allowed)), 'error' );
-                            bp_core_redirect( trailingslashit( bp_displayed_user_domain() . $bp->profile->slug . '/edit/group/' . bp_action_variable( 1 ) ) );
-                        }
-                        elseif ($filesize > $this->images_max_filesize) {
-                            bp_core_add_message( sprintf(__('Max image upload size: %s MB.', 'bxmtf'), $this->images_max_filesize), 'error' );
-                            bp_core_redirect( trailingslashit( bp_displayed_user_domain() . $bp->profile->slug . '/edit/group/' . bp_action_variable( 1 ) ) );
-                        } else {
-                            // Delete previous image.
-                            if (isset($_POST['field_'.$field_id.'_hiddenimg'])      &&
-                                !empty($_POST['field_'.$field_id.'_hiddenimg'])     &&
-                                file_exists($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenimg']))
-                            {
-                                unlink($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenimg']);
-                            }
-                        }
-                    }
-                    elseif ($field->type == 'file')
-                    {
-                        $ext_allowed = $this->files_ext_allowed;
-                        if (!in_array($ext, $ext_allowed)) {
-                            bp_core_add_message( sprintf(__('File type not allowed: (%s).', 'bxmtf'), implode(',', $this->files_ext_allowed)), 'error' );
-                            bp_core_redirect( trailingslashit( bp_displayed_user_domain() . $bp->profile->slug . '/edit/group/' . bp_action_variable( 1 ) ) );
-                        }
-                        elseif ($filesize > $this->files_max_filesize) {
-                            bp_core_add_message( sprintf(__('Max file upload size: %s MB.', 'bxmtf'), $this->files_max_filesize), 'error' );
-                            bp_core_redirect( trailingslashit( bp_displayed_user_domain() . $bp->profile->slug . '/edit/group/' . bp_action_variable( 1 ) ) );
-                        } else {
-                            // Delete previous file.
-                            if (isset($_POST['field_'.$field_id.'_hiddenfile'])     &&
-                                !empty($_POST['field_'.$field_id.'_hiddenfile'])    &&
-                                file_exists($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenfile']))
-                            {
-                                unlink($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenfile']);
-                            }
-                        }
-                    }
-
-                    if (in_array($ext, $ext_allowed))
-                    {
-                        require_once( ABSPATH . '/wp-admin/includes/file.php' );
-                        $this->user_id = $data->user_id;
-                        add_filter( 'upload_dir', array($this, 'bxmtf_profile_upload_dir'), 10, 0 );
-                        $_POST['action'] = 'wp_handle_upload';
-                        $uploaded_file = wp_handle_upload( $_FILES['field_'.$field_id] );
-                        remove_filter('upload_dir', array($this, 'bxmtf_profile_upload_dir'), 10 );
-                        $value = str_replace($uploads['baseurl'], '', $uploaded_file['url']);
-                    }
-                } else {
-                    // Handles delete checkbox.
-                    if ($field->type == 'image' && isset($_POST['field_'.$field_id.'_deleteimg']) &&
-                        $_POST['field_'.$field_id.'_deleteimg'])
-                    {
-                        if (isset($_POST['field_'.$field_id.'_hiddenimg'])      &&
-                            !empty($_POST['field_'.$field_id.'_hiddenimg'])     &&
-                            file_exists($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenimg']))
-                        {
-                            unlink($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenimg']);
-                        }
-                        $value = array();
-                    }
-                    elseif ($field->type == 'image')
-                    {
-                        $value = (isset($_POST['field_'.$field_id.'_hiddenimg'])) ?
-                            $_POST['field_'.$field_id.'_hiddenimg'] : '';
-                    }
-
-                    if ($field->type == 'file' && isset($_POST['field_'.$field_id.'_deletefile']) &&
-                        $_POST['field_'.$field_id.'_deletefile'])
-                    {
-                        if (isset($_POST['field_'.$field_id.'_hiddenfile'])     &&
-                            !empty($_POST['field_'.$field_id.'_hiddenfile'])    &&
-                            file_exists($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenfile']))
-                        {
-                            unlink($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenfile']);
-                        }
-                        $value = array();
-                    }
-                    elseif ($field->type == 'file')
-                    {
-                        $value = isset($_POST['field_'.$field_id.'_hiddenfile']) ?
-                            $_POST['field_'.$field_id.'_hiddenfile'] : '';
-                    }
-                }
-
-                $data->value = (isset($value))?$value:'';
+                //Do something
             }
         }
 

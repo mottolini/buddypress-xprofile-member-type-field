@@ -84,7 +84,11 @@ if (!class_exists('Bxmtf_Field_Type_MemberType'))
                 unset( $raw_properties['user_id'] );
             } else {
                 $user_id = bp_displayed_user_id();
-            } ?>
+            }
+            if ($user_id) { //We can't change member type after signup!
+                $raw_properties['disabled'] = true;
+            }
+            ?>
 
             <div class="member-type">
                 <label for="<?php bp_the_profile_field_input_name(); ?>">
@@ -96,10 +100,6 @@ if (!class_exists('Bxmtf_Field_Type_MemberType'))
 
                 /** This action is documented in bp-xprofile/bp-xprofile-classes */
                 do_action( bp_get_the_profile_field_errors_action() ); ?>
-
-                <?php bp_the_profile_field_options( array(
-                    'user_id' => $user_id
-                ) ); ?>
 
                 <select <?php echo $this->get_edit_field_html_elements( $raw_properties ); ?>>
                     <?php bp_the_profile_field_options( array(
@@ -137,10 +137,25 @@ if (!class_exists('Bxmtf_Field_Type_MemberType'))
          */
         public function edit_field_options_html( array $args = array() ) {
 
+            $member_types = bp_get_member_types( array(), 'objects');
+            //@todo: insert here the possibility to rearrange/sort the members type array
 
-            echo '<option value="pollo">pollo</option>';
-            echo '<option selected="selected" value="pippo">pippo</option>';
-            //echo apply_filters( 'bp_get_the_profile_field_birthdate', $html, $args['type'], $day, $month, $year, $this->field_obj->id, $date );
+            $current_member_type = '';
+            if ($args['user_id']) { //let's retrieve the members type
+                $current_member_type = bp_get_member_type($args['user_id']);
+            }
+
+            $html = '';
+            foreach ($member_types as $member_type) {
+                $selected = '';
+                if ($current_member_type && $current_member_type == $member_type->name) {
+                    $selected = 'selected="selected"';
+                }
+                $html .= '<option ' . $selected . ' value="' . $member_type->name . '">' . $member_type->labels['singular_name'] . '</option>';
+            }
+
+            //@todo: insert here the possibility to modify the html
+            echo $html;
         }
 
     }
