@@ -102,9 +102,7 @@ if (!class_exists('Bxmtf_Field_Type_MemberType'))
                 do_action( bp_get_the_profile_field_errors_action() ); ?>
 
                 <select <?php echo $this->get_edit_field_html_elements( $raw_properties ); ?>>
-                    <?php bp_the_profile_field_options( array(
-                        'user_id' => $user_id
-                    ) ); ?>
+                    <?php bp_the_profile_field_options( array('user_id' => $user_id) ); ?>
                 </select>
 
                 <?php if ( ! bp_get_the_profile_field_is_required() ) : ?>
@@ -156,6 +154,16 @@ if (!class_exists('Bxmtf_Field_Type_MemberType'))
 
             //@todo: insert here the possibility to modify the html
             echo $html;
+        }
+
+        /**
+         * Overriden, we cannot validate against the whitelist.
+         * @param type $values
+         * @return type
+         */
+        public function is_valid( $values ) {
+            $member_types = bp_get_member_types( array(), 'names');
+            return in_array($values, $member_types);
         }
 
     }

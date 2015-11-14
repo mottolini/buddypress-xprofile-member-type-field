@@ -11,14 +11,8 @@ if (!class_exists('Bxmtf_Plugin'))
 {
     class Bxmtf_Plugin
     {
-        CONST BXMTF_MAX_FILESIZE = 8;
-
         private $version;
         private $user_id = null;
-        private $images_ext_allowed;
-        private $images_max_filesize;
-        private $files_ext_allowed;
-        private $files_max_filesize;
 
         public function __construct ()
         {
@@ -34,11 +28,12 @@ if (!class_exists('Bxmtf_Plugin'))
             /** Buddypress hook **/
             add_action( 'bp_init', array($this, 'init') );
             //add_action( 'bp_signup_validate', array($this, 'bxmtf_signup_validate') );
-            add_action( 'xprofile_data_before_save', array($this, 'bxmtf_xprofile_data_before_save') );
-            add_action( 'xprofile_data_after_delete', array($this, 'bxmtf_xprofile_data_after_delete') );
+            //add_action( 'xprofile_data_before_save', array($this, 'bxmtf_xprofile_data_before_save') );
+            add_action( 'xprofile_data_after_save', array($this, 'bxmtf_xprofile_data_after_save') );
+            //add_action( 'xprofile_data_after_delete', array($this, 'bxmtf_xprofile_data_after_delete') );
 
             /** Filters **/
-            add_filter( 'bp_xprofile_get_field_types', array($this, 'bxmtf_get_field_types'), 10, 1 );
+            add_filter( 'bp_xprofile_get_field_types', array($this, 'bxmtf_get_field_types'), 10, 1 );      //enumerates the field types
             add_filter( 'xprofile_get_field_data', array($this, 'bxmtf_get_field_data'), 10, 2 );
             add_filter( 'bp_get_the_profile_field_value', array($this, 'bxmtf_get_field_value'), 10, 3 );
             /** BP Profile Search Filters **/
@@ -107,15 +102,8 @@ if (!class_exists('Bxmtf_Plugin'))
             if ($value_to_return !== '') {
                 // Member Type
                 if ($field->type == 'member_type') {
-                    $value_to_return = 1234;
-                }
-                // Web.
-                elseif ($field->type == 'web') {
-                    if (strpos($value_to_return, 'href=') === false) {
-                        $value_to_return = sprintf('<a href="%s">%s</a>',
-                            $value_to_return,
-                            $value_to_return);
-                    }
+                    $user_id = bp_displayed_user_id();
+                    $value_to_return = bp_get_member_type($user_id);
                 } else {
                     // Not stripping tags.
                     $value_to_return = $value;
@@ -226,70 +214,26 @@ if (!class_exists('Bxmtf_Plugin'))
             } // End if ( bp_is_active(...
         }
 
-        function bxmtf_xprofile_data_before_save($data)
+        function bxmtf_xprofile_data_after_save($data)
         {
-            global $bp;
-
             $field_id = $data->field_id;
             $field = new BP_XProfile_Field($field_id);
 
-            if ($field->type == 'membertype')
+            if ($field->type == 'member_type')
             {
-                //Do something
+                $member_type = bp_set_member_type( $data->user_id, $data->value );
             }
         }
 
         public function bxmtf_xprofile_data_after_delete($data)
         {
-            $field_id = $data->field_id;
-            $field = new BP_XProfile_Field($field_id);
-            $uploads = wp_upload_dir();
-            if ($field->type == 'image' && isset($_POST['field_'.$field_id.'_deleteimg']) &&
-                $_POST['field_'.$field_id.'_deleteimg'])
-            {
-                if (isset($_POST['field_'.$field_id.'_hiddenimg']) &&
-                    !empty($_POST['field_'.$field_id.'_hiddenimg']) &&
-                    file_exists($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenimg']))
-                {
-                    unlink($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenimg']);
-                }
-            }
 
-            if ($field->type == 'file' && isset($_POST['field_'.$field_id.'_deletefile']) &&
-                $_POST['field_'.$field_id.'_deletefile'])
-            {
-                if (isset($_POST['field_'.$field_id.'_hiddenfile']) &&
-                    !empty($_POST['field_'.$field_id.'_hiddenfile']) &&
-                    file_exists($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenfile']))
-                {
-                    unlink($uploads['basedir'] . $_POST['field_'.$field_id.'_hiddenfile']);
-                }
-            }
         }
 
         public function bxmtf_map($field_type, $field)
         {
             switch($field_type) {
-                case 'birthdate':
-                case 'datepicker':
-                    $field_type = 'datebox';
-                    break;
-
-                case 'email':
-                case 'web':
-                case 'image':
-                case 'file':
-                case 'color':
-                    $field_type = 'textbox';
-                    break;
-
-                case 'decimal_number':
-                    $field_type = 'number';
-                    break;
-
-                case 'select_custom_post_type':
-                case 'multiselect_custom_post_type':
-                case 'checkbox_acceptance':
+                case 'member_type':
                     $field_type = 'selectbox';
                     break;
             }
