@@ -3,7 +3,7 @@
     Plugin Name: BuddyPress Xprofile Member Type Field
     Plugin URI: https://github.com/mottolini/buddypress-xprofile-member-type-field
     Description: BuddyPress installation required!! This plugin provides a field that allows to select one of member types
-    Version: 0.0.1
+    Version: 1.0.0
     Author: mottolini
     Author URI: https://github.com/mottolini
 */
@@ -16,7 +16,7 @@ if (!class_exists('Bxmtf_Plugin'))
 
         public function __construct ()
         {
-            $this->version = "0.0.1";
+            $this->version = "1.0.0";
 
             /** Main hooks **/
             add_action( 'plugins_loaded', array($this, 'bxmtf_update') );
@@ -68,8 +68,6 @@ if (!class_exists('Bxmtf_Plugin'))
                     delete_option('bxmtf_activated');
                 }
 
-                // Enqueue javascript.
-                //wp_enqueue_script('bxmtf-js', plugin_dir_url(__FILE__) . 'js/admin.js', array(), $this->version, true);
             }
         }
 
@@ -123,12 +121,7 @@ if (!class_exists('Bxmtf_Plugin'))
             }
             return $value;
 
-
-
-            return apply_filters('bxmtf_show_field_value', $value_to_return, $type, $id, $value);
         }
-
-
 
         public function bxmtf_signup_validate() {
         }
