@@ -8,8 +8,7 @@ defined( 'ABSPATH' ) || exit;
 
 if (!class_exists('Bxmtf_Field_Type_MemberType'))
 {
-    class Bxmtf_Field_Type_MemberType extends BP_XProfile_Field_Type
-    {
+    class Bxmtf_Field_Type_MemberType extends BP_XProfile_Field_Type {
         /**
          * Constructor for the MemberType field type.
          *
@@ -48,6 +47,12 @@ if (!class_exists('Bxmtf_Field_Type_MemberType'))
             <?php
         }
 
+
+        public static function display_filter( $field_value, $field_id = '' ) {
+            $member_type = bp_get_member_types( array('name' => $field_value), 'objects');
+            return $member_type[$field_value]->labels['singular_name'];
+        }
+
         /**
          * Output HTML for this field type's children options on the wp-admin Profile Fields "Add Field" and "Edit Field" screens.
          *
@@ -61,7 +66,7 @@ if (!class_exists('Bxmtf_Field_Type_MemberType'))
          */
         public function admin_new_field_html (BP_XProfile_Field $current_field, $control_type = '')
         {
-            parent::admin_new_field_html( $current_field, 'checkbox' );
+            parent::admin_new_field_html( $current_field, 'member_type' );
         }
 
         /**

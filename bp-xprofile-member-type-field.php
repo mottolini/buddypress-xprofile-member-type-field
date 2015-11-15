@@ -35,7 +35,7 @@ if (!class_exists('Bxmtf_Plugin'))
             /** Filters **/
             add_filter( 'bp_xprofile_get_field_types', array($this, 'bxmtf_get_field_types'), 10, 1 );      //enumerates the field types
             add_filter( 'xprofile_get_field_data', array($this, 'bxmtf_get_field_data'), 10, 2 );
-            add_filter( 'bp_get_the_profile_field_value', array($this, 'bxmtf_get_field_value'), 10, 3 );
+            //add_filter( 'bp_get_the_profile_field_value', array($this, 'bxmtf_get_field_value'), 6, 3 );
             /** BP Profile Search Filters **/
             add_filter ('bps_field_validation_type', array($this, 'bxmtf_map'), 10, 2);
             add_filter ('bps_field_html_type', array($this, 'bxmtf_map'), 10, 2);
@@ -115,103 +115,22 @@ if (!class_exists('Bxmtf_Plugin'))
 
         public function bxmtf_get_field_value($value='', $type='', $id='')
         {
-            if ($type == 'membertype') {
-                $value = 'model';
+            if ($type == 'member_type') {
+                //$value = 'Model122';
+                $member_type = bp_get_member_types( array('name' => $value), 'objects');
+                $search_url   = add_query_arg( array( 's' => urlencode( $value ) ), bp_get_members_directory_permalink() );
+                $value = '<a href="' . esc_url( $search_url ) . '" rel="nofollow">' . $member_type[$value]->labels['singular_name'] . '</a>';
             }
             return $value;
-            $value_to_return = strip_tags($value);
-            if ($value_to_return !== '') {
-                // Birthdate.
-                if ($type == 'birthdate') {
-                    $show_age = false;
-                    $field = new BP_XProfile_Field($id);
-                    if ($field) {
-                        $childs = $field->get_children();
-                        if (isset($childs) && $childs && count($childs) > 0
-                            && is_object($childs[0]) && $childs[0]->name == 'show_age') {
-                            $show_age = true;
-                        }
-                    }
-                    if ($show_age) {
-                        $value_to_return = floor((time() - strtotime($value_to_return))/31556926);
-                    } else {
-                        $value_to_return = date_i18n(get_option('date_format') ,strtotime($value_to_return) );
-                    }
-                }
-                // Email.
-                elseif ($type == 'email') {
-                    if (strpos($value_to_return, 'mailto') === false) {
-                        $value_to_return = sprintf('<a href="mailto:%s">%s</a>',
-                            $value_to_return,
-                            $value_to_return);
-                    }
-                }
-                // Web.
-                elseif ($type == 'web') {
-                    if (strpos($value_to_return, 'href=') === false) {
-                        $value_to_return = sprintf('<a href="%s">%s</a>',
-                            $value_to_return,
-                            $value_to_return);
-                    }
-                } else {
-                    // Not stripping tags.
-                    $value_to_return = $value;
-                }
-            }
+
+
 
             return apply_filters('bxmtf_show_field_value', $value_to_return, $type, $id, $value);
         }
 
 
 
-        public function bxmtf_signup_validate()
-        {
-            global $bp;
-            if ( bp_is_active( 'xprofile' ) )
-            {
-                if ( isset( $_POST['signup_profile_field_ids'] ) && !empty( $_POST['signup_profile_field_ids'] ) )
-                {
-                    $profile_field_ids = explode(',', $_POST['signup_profile_field_ids']);
-                    foreach ($profile_field_ids as $field_id)
-                    {
-                        $field = new BP_XProfile_Field($field_id);
-                        if ( ($field->type == 'image' || $field->type == 'file') &&
-                            isset($_FILES['field_'.$field_id])) {
-                            // Delete required field error.
-                            unset($bp->signup->errors['field_'.$field_id]);
-
-                            $filesize = round($_FILES['field_'.$field_id]['size'] / (1024 * 1024), 2);
-                            if ($field->is_required && $filesize <= 0) {
-                                $bp->signup->errors['field_' . $field_id] = __( 'This is a required field', 'buddypress' );
-                            } elseif ($filesize > 0) {
-                                // Check extensions.
-                                $ext = strtolower(substr($_FILES['field_'.$field_id]['name'], strrpos($_FILES['field_'.$field_id]['name'],'.')+1));
-                                if ($field->type == 'image') {
-                                    if (!in_array($ext, $this->images_ext_allowed)) {
-                                        $bp->signup->errors['field_'.$field_id] = sprintf(__('Image type not allowed: (%s).', 'bxmtf'), implode(',', $this->images_ext_allowed));
-                                    }
-                                    elseif ($filesize > $this->images_max_filesize) {
-                                        $bp->signup->errors['field_'.$field_id] = sprintf(__('Max image upload size: %s MB.', 'bxmtf'), $this->images_max_filesize);
-                                    }
-                                } elseif ($field->type == 'file') {
-                                    if (!in_array($ext, $this->files_ext_allowed)) {
-                                        $bp->signup->errors['field_'.$field_id] = sprintf(__('File type not allowed: (%s).', 'bxmtf'), implode(',', $this->files_ext_allowed));
-                                    }
-                                    elseif ($filesize > $this->files_max_filesize) {
-                                        $bp->signup->errors['field_'.$field_id] = sprintf(__('Max file upload size: %s MB.', 'bxmtf'), $this->files_max_filesize);
-                                    }
-                                }
-                            }
-                        }
-                        elseif ($field->type == 'checkbox_acceptance' && $field->is_required) {
-                            if (isset($_POST['field_' . $field_id])
-                                && $_POST['field_' . $field_id] != 1) {
-                                $bp->signup->errors['field_' . $field_id] = __( 'This is a required field', 'buddypress' );
-                            }
-                        }
-                    } // End foreach...
-                } // End if ( isset...
-            } // End if ( bp_is_active(...
+        public function bxmtf_signup_validate() {
         }
 
         function bxmtf_xprofile_data_after_save($data)
@@ -225,9 +144,7 @@ if (!class_exists('Bxmtf_Plugin'))
             }
         }
 
-        public function bxmtf_xprofile_data_after_delete($data)
-        {
-
+        public function bxmtf_xprofile_data_after_delete($data) {
         }
 
         public function bxmtf_map($field_type, $field)
